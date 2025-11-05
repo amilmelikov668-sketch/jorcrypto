@@ -2,236 +2,353 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crypto Wallet</title>
-    <!-- Подключаем Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FPI Bank</title>
+    <!-- РџРѕРґРєР»СЋС‡Р°РµРј Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключаем Telegram Web App SDK -->
+    <!-- РџРѕРґРєР»СЋС‡Р°РµРј Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Иконки (для кнопки "глаз") -->
-    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide.min.js"></script>
-
     <style>
-        /* Базовые стили */
+        /* * РћСЃРЅРѕРІРЅРѕР№ СЃС‚РёР»СЊ, РєРѕС‚РѕСЂС‹Р№ СЌРјСѓР»РёСЂСѓРµС‚ С„РѕРЅ Рё С†РІРµС‚Р°
+         * СЃРѕ СЃРєСЂРёРЅС€РѕС‚Р° (С‚РµРјРЅР°СЏ С‚РµРјР°).
+         */
+        :root {
+            --tg-bg: #101010;
+            --tg-secondary-bg: #1c1c1e;
+            --tg-text: #ffffff;
+            --tg-secondary-text: #8e8e93;
+            --tg-primary-green: #b8ff6d;
+            --tg-primary-purple: #9b51e0;
+            --tg-red: #ff453a;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
             margin: 0;
-            /* * Мы будем устанавливать цвета фона и текста через JS SDK,
-             * чтобы они соответствовали теме Telegram пользователя (темной или светлой).
-             * Эти цвета - просто запасной вариант.
+            padding: 20px 16px 120px 16px; /* РћС‚СЃС‚СѓРї СЃРЅРёР·Сѓ РґР»СЏ РЅР°РІ. РїР°РЅРµР»Рё */
+            overscroll-behavior: none; /* РћС‚РєР»СЋС‡Р°РµРј "РїРѕС‚СЏРіРёРІР°РЅРёРµ" СЃС‚СЂР°РЅРёС†С‹ */
+            user-select: none;
+        }
+        
+        /* РџР»РµР№СЃС…РѕР»РґРµСЂ РґР»СЏ Р»РѕРіРѕС‚РёРїР° FPI */
+        .logo-placeholder {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            position: relative;
+            /* * Р“СЂР°РґРёРµРЅС‚ РґР»СЏ РёРјРёС‚Р°С†РёРё "СЃРёСЏРЅРёСЏ" Р»РѕРіРѕС‚РёРїР°.
+             * Р­С‚Рѕ СЃР»РѕР¶РЅР°СЏ С‡Р°СЃС‚СЊ, РІРѕСЃСЃРѕР·РґР°РЅРЅР°СЏ РїРѕ СЃРєСЂРёРЅС€РѕС‚Сѓ.
              */
-            background-color: var(--tg-theme-bg-color, #18222d);
-            color: var(--tg-theme-text-color, #ffffff);
+            background: radial-gradient(circle, var(--tg-primary-purple) 0%, rgba(155, 81, 224, 0.4) 40%, rgba(155, 81, 224, 0) 65%);
         }
-        /* Стилизация для скрытого баланса */
-        .balance-hidden .balance-value {
-            filter: blur(5px);
-            pointer-events: none;
+        .logo-placeholder::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* Р’РЅРµС€РЅРµРµ Р·РµР»РµРЅРѕРµ РєРѕР»СЊС†Рѕ */
+            border: 6px dashed var(--tg-primary-green);
+            opacity: 0.5;
+            animation: spin 20s linear infinite;
         }
-        .balance-hidden .asset-balance,
-        .balance-hidden .asset-fiat-balance {
-            filter: blur(5px);
-            pointer-events: none;
+        .logo-inner-text {
+            /* * Р­С‚Рѕ РїР»РµР№СЃС…РѕР»РґРµСЂ РґР»СЏ С„РёРѕР»РµС‚РѕРІРѕР№ Р±СѓРєРІС‹ 'F', 
+             * РєРѕС‚РѕСЂСѓСЋ РЅРµРІРѕР·РјРѕР¶РЅРѕ РІРѕСЃСЃРѕР·РґР°С‚СЊ Р±РµР· SVG.
+             */
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--tg-primary-purple);
+            text-shadow: 0 0 15px rgba(255,255,255,0.3);
+            z-index: 10;
+        }
+
+        /* РђРЅРёРјР°С†РёСЏ РІСЂР°С‰РµРЅРёСЏ РґР»СЏ Р»РѕРіРѕ */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* РЎС‚РёР»Рё РґР»СЏ РєРЅРѕРїРѕРє РґРµР№СЃС‚РІРёР№ */
+        .action-button {
+            background-color: var(--tg-secondary-bg);
+            border-radius: 20px;
+            width: 100%;
+            padding-top: 100%; /* Р”РµР»Р°РµС‚ РєРЅРѕРїРєСѓ РєРІР°РґСЂР°С‚РЅРѕР№ */
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .action-button:active {
+            transform: scale(0.95);
+        }
+        .action-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-content svg {
+            width: 24px;
+            height: 24px;
+        }
+        .action-content span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* РљР°СЂС‚РѕС‡РєРё "Р±СѓСЃС‚РѕРІ" */
+        .boost-card {
+            background-color: var(--tg-secondary-bg);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+        }
+        .boost-image-placeholder {
+            height: 120px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            /* РџР»РµР№СЃС…РѕР»РґРµСЂ РґР»СЏ РєР°СЃС‚РѕРјРЅС‹С… РєР°СЂС‚РёРЅРѕРє */
+            background-color: #333; 
+        }
+
+        /* РќРёР¶РЅСЏСЏ РЅР°РІРёРіР°С†РёСЏ */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(28, 28, 30, 0.85); /* РџРѕР»СѓРїСЂРѕР·СЂР°С‡РЅС‹Р№ С„РѕРЅ */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 20px 0; /* Р”РѕРї. РѕС‚СЃС‚СѓРї РґР»СЏ safe-area */
+            border-top: 1px solid #3a3a3c;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--tg-secondary-text);
+            cursor: pointer;
+        }
+        .nav-item.active {
+            color: var(--tg-primary-green);
+        }
+        .nav-item svg {
+            width: 28px;
+            height: 28px;
         }
     </style>
 </head>
-<body class="p-4 pt-8">
+<body>
 
-    <!-- 1. Блок общего баланса -->
-    <div id="wallet-container" class="text-center">
-        <div class="text-gray-400 text-sm" id="balance-title">Общий баланс в RUB</div>
-        <div class="flex items-center justify-center space-x-2 mt-1 balance-value">
-            <span class="text-4xl font-bold" id="total-balance">0.00</span>
-            <span class="text-3xl font-bold">?</span>
+    <!-- 1. Р’РµСЂС…РЅСЏСЏ РЅР°РІРёРіР°С†РёСЏ (РІРЅСѓС‚СЂРё РїСЂРёР»РѕР¶РµРЅРёСЏ) -->
+    <header class="flex justify-between items-center mb-4">
+        <button id="close-btn" class="text-white text-lg font-medium flex items-center gap-1">
+            <!-- SVG: 'X' (Р—Р°РєСЂС‹С‚СЊ) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>Р—Р°РєСЂС‹С‚СЊ</span>
+        </button>
+        <button>
+            <!-- SVG: 'v' (Dropdown) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+    </header>
+
+    <!-- 2. Р›РѕРіРѕС‚РёРї Рё Р‘Р°Р»Р°РЅСЃ -->
+    <main class="text-center">
+        <!-- РџР»РµР№СЃС…РѕР»РґРµСЂ Р»РѕРіРѕС‚РёРїР° -->
+        <div class="logo-placeholder">
+            <span class="logo-inner-text">F</span>
         </div>
-        <button id="toggle-balance" class="absolute top-10 right-5 text-gray-400">
-            <!-- Иконка будет вставлена через JS -->
-        </button>
-    </div>
 
-    <!-- 2. Блок кнопок действий -->
-    <div class="grid grid-cols-4 gap-4 my-8">
-        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
-            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            </div>
-            <span class="text-xs mt-2 font-medium">Пополнить</span>
-        </button>
-        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
-            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-            </div>
-            <span class="text-xs mt-2 font-medium">Вывести</span>
-        </button>
-        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
-            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 3 3-7 7-3-3 7-7"/><path d="m2 21 6-6"/><path d="m17 8 3 3"/><path d="M9 8c-2.2 0-4 1.8-4 4 0 2.2 1.8 4 4 4s4-1.8 4-4-1.8-4-4-4z"/></svg>
-            </div>
-            <span class="text-xs mt-2 font-medium">Обмен</span>
-        </button>
-        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
-            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="4"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
-            </div>
-            <span class="text-xs mt-2 font-medium">Биржа</span>
-        </button>
-    </div>
-
-    <!-- 3. Блок активов -->
-    <div>
-        <h2 class="text-xl font-bold mb-4">Активы</h2>
-        <div id="assets-list" class="space-y-4">
-            <!-- Активы будут добавлены сюда из "базы данных" -->
-            <!-- Пример актива (заполняется из JS) -->
-            <!--
-            <div class="flex items-center">
-                <img src="https://via.placeholder.com/40/374151/FFFFFF?text=T" class="w-10 h-10 rounded-full" alt="USDT">
-                <div class="ml-3 flex-1">
-                    <div class="font-bold">Tether</div>
-                    <div class="text-xs text-gray-400">$1.00 <span class="text-green-500">+0.00%</span></div>
-                </div>
-                <div class="text-right">
-                    <div class="font-bold asset-balance">0.00 USDT</div>
-                    <div class="text-xs text-gray-400 asset-fiat-balance">0.00 ?</div>
-                </div>
-            </div>
-            -->
+        <!-- РќР°Р·РІР°РЅРёРµ СЃ РіР°Р»РѕС‡РєРѕР№ -->
+        <div class="flex justify-center items-center gap-1.5 -mt-4 mb-2">
+            <span class="text-2xl font-bold">FPIBank</span>
+            <!-- SVG: Р“Р°Р»РѕС‡РєР° РІРµСЂРёС„РёРєР°С†РёРё -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="var(--tg-primary-green)" stroke="var(--tg-bg)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
         </div>
-    </div>
+
+        <!-- Р‘Р°Р»Р°РЅСЃ -->
+        <div class="text-5xl font-bold mb-3">
+            0,00
+        </div>
+
+        <!-- РРЅС„Рѕ-СЃСЃС‹Р»РєРё -->
+        <div class="flex justify-center items-center gap-4 text-sm font-medium mb-8">
+            <span class="text-white">РњРѕРЅРµС‚С‹</span>
+            <span class="text-var(--tg-secondary-text)">|</span>
+            <span class="text-var(--tg-primary-green)">РџРѕРґРєР»СЋС‡РёС‚СЊ РєРѕС€РµР»РµРє</span>
+            <span class="text-var(--tg-secondary-text)">|</span>
+            <div class="flex items-center gap-1">
+                <span>$0.0013</span>
+                <span class="text-var(--tg-red)">-6.92%</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- 3. РљРЅРѕРїРєРё РґРµР№СЃС‚РІРёР№ -->
+    <section class="grid grid-cols-4 gap-3 mb-6">
+        <!-- РџРѕРїРѕР»РЅРёС‚СЊ -->
+        <div id="btn-topup" class="action-button">
+            <div class="action-content">
+                <!-- SVG: + -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>РџРѕРїРѕР»РЅРёС‚СЊ</span>
+            </div>
+        </div>
+        <!-- РћР±РјРµРЅСЏС‚СЊ -->
+        <div id="btn-swap" class="action-button">
+            <div class="action-content">
+                <!-- SVG: refresh -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                <span>РћР±РјРµРЅСЏС‚СЊ</span>
+            </div>
+        </div>
+        <!-- РџРѕР»СѓС‡РёС‚СЊ -->
+        <div id="btn-receive" class="action-button">
+            <div class="action-content">
+                <!-- SVG: arrow-down -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                <span>РџРѕР»СѓС‡РёС‚СЊ</span>
+            </div>
+        </div>
+        <!-- РћС‚РїСЂР°РІРёС‚СЊ -->
+        <div id="btn-send" class="action-button">
+            <div class="action-content">
+                <!-- SVG: arrow-up -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                <span>РћС‚РїСЂР°РІРёС‚СЊ</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. РСЃС‚РѕСЂРёСЏ С‚СЂР°РЅР·Р°РєС†РёР№ (СЃС‚Р°С‚РёРєР°) -->
+    <section class="mb-6">
+        <div class="bg-var(--tg-secondary-bg) p-4 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- РРєРѕРЅРєР° С‚СЂР°РЅР·Р°РєС†РёРё -->
+                <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
+                    <!-- SVG: arrow-down (РїРѕР»СѓС‡РµРЅРѕ) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--tg-primary-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                </div>
+                <div>
+                    <div class="text-base font-semibold">РџРѕР»СѓС‡РµРЅРѕ</div>
+                    <div class="text-sm text-var(--tg-secondary-text)">06.11.2025  03:14</div>
+                </div>
+            </div>
+            <div>
+                <div class="text-base font-semibold text-right text-var(--tg-primary-green)">5,00 <span class="text-white">Krishki</span></div>
+                <div class="text-sm text-var(--tg-secondary-text) text-right">Р‘РѕРЅСѓСЃ РѕС‚ Р¤РџРР‘РђРќРљР°</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. РљР°СЂС‚РѕС‡РєРё "Р±СѓСЃС‚РѕРІ" -->
+    <section class="grid grid-cols-3 gap-3">
+        <!-- РџР°РєРѕСЃС‚Рё -->
+        <div class="boost-card">
+            <div class="boost-image-placeholder" style="background-color: #5856d640;">
+                <!-- SVG РїР»РµР№СЃС…РѕР»РґРµСЂ -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#5856d6" stroke-width="1.5"><path d="M12 2.69l.34.3a10.2 10.2 0 0 1 4.33 4.33l.3.34L17.3 8l-1.4-1.4.34-.3a7.8 7.8 0 0 0-3.3-3.3l-.3-.34L12 2.69zm0 18.62l-.34-.3a10.2 10.2 0 0 1-4.33-4.33l-.3-.34L6.7 16l1.4 1.4-.34.3a7.8 7.8 0 0 0 3.3 3.3l.3.34L12 21.31zm0-9.31a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path></svg>
+            </div>
+            <span class="font-semibold">РџР°РєРѕСЃС‚Рё</span>
+        </div>
+        <!-- Р›РѕРІСѓС€РєР° -->
+        <div class="boost-card">
+            <div class="boost-image-placeholder" style="background-color: #ffcc0040;">
+                <!-- SVG РїР»РµР№СЃС…РѕР»РґРµСЂ -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <span class="font-semibold">Р›РѕРІСѓС€РєР°</span>
+        </div>
+        <!-- РњРµР»РєРёР№ С€СЂРё -->
+        <div class="boost-card">
+            <div class="boost-image-placeholder" style="background-color: #ff950040;">
+                <!-- SVG РїР»РµР№СЃС…РѕР»РґРµСЂ -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="1.5"><path d="M20 9v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9"></path><path d="M4 11a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v0"></path><path d="M10 11V6a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v5"></path></svg>
+            </div>
+            <span class="font-semibold">РњРµР»РєРёР№ С€СЂРё</span>
+        </div>
+    </section>
+
+    <!-- 6. РќРёР¶РЅСЏСЏ РЅР°РІРёРіР°С†РёСЏ (РєР°СЃС‚РѕРјРЅР°СЏ) -->
+    <nav class="bottom-nav">
+        <!-- Р Р°Р·РІР»РµС‡РµРЅРёСЏ (Р°РєС‚РёРІРЅРѕ) -->
+        <div class="nav-item active">
+            <!-- SVG: house -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="var(--tg-primary-green)" stroke="var(--tg-primary-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Р Р°Р·РІР»РµС‡РµРЅРёСЏ</span>
+        </div>
+        <!-- РџР»Р°С‚РµР¶Рё -->
+        <div class="nav-item">
+            <!-- SVG: credit-card -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+            <span>РџР»Р°С‚РµР¶Рё</span>
+        </div>
+        <!-- Р”СЂСѓР·СЊСЏ -->
+        <div class="nav-item">
+            <!-- SVG: users -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span>Р”СЂСѓР·СЊСЏ</span>
+        </div>
+        <!-- РРЅРІРµСЃС‚РёС†РёРё -->
+        <div class="nav-item">
+            <!-- SVG: bar-chart -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>
+            <span>РРЅРІРµСЃС‚РёС†РёРё</span>
+        </div>
+    </nav>
 
     <script>
+        // РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј Telegram Web App
         const tg = window.Telegram.WebApp;
 
-        // --- 1. Настройка приложения ---
+        // РЎРѕРѕР±С‰Р°РµРј Telegram, С‡С‚Рѕ РїСЂРёР»РѕР¶РµРЅРёРµ РіРѕС‚РѕРІРѕ
         tg.ready();
-        
-        // Устанавливаем цвета из темы Telegram
-        document.body.style.backgroundColor = tg.themeParams.bg_color || '#18222d';
-        document.body.style.color = tg.themeParams.text_color || '#ffffff';
-        tg.setHeaderColor(tg.themeParams.bg_color || '#18222d');
-        tg.setBackgroundColor(tg.themeParams.bg_color || '#18222d');
-        
-        // Включаем темную/светлую тему
-        document.documentElement.style.setProperty('color-scheme', tg.colorScheme);
 
-        // --- 2. Элементы ---
-        const walletContainer = document.getElementById('wallet-container');
-        const balanceTitle = document.getElementById('balance-title');
-        const totalBalanceEl = document.getElementById('total-balance');
-        const toggleBalanceBtn = document.getElementById('toggle-balance');
-        const assetsListEl = document.getElementById('assets-list');
-        const actionButtons = document.querySelectorAll('.action-button');
+        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С†РІРµС‚ С„РѕРЅР° Рё С…РµРґРµСЂР°
+        tg.setHeaderColor('secondary_bg_color');
+        document.body.style.backgroundColor = tg.themeParams.secondary_bg_color || 'var(--tg-bg)';
 
-        let isBalanceHidden = false;
-
-        // --- 3. Получение данных ---
-        
-        // Бот (бэкенд) передаст баланс через ?balance=...
-        let initialBalance = 0;
-        if (tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
-            const balanceParam = parseFloat(tg.initDataUnsafe.start_param);
-            if (!isNaN(balanceParam)) {
-                initialBalance = balanceParam;
-            }
-        }
-        
-        // Моковые (тестовые) данные об активах
-        // В реальном приложении их тоже должен присылать бэкенд
-        const assets = [
-            { 
-                icon: 'https://cryptologos.cc/logos/tether-usdt-logo.png?v=032',
-                name: 'Tether', 
-                ticker: 'USDT', 
-                price: 1.00, 
-                change: "+0.03%", 
-                changeColor: 'text-green-500', 
-                balance: initialBalance / 90, // Пример: конвертируем RUB в USDT
-                fiatBalance: initialBalance // Весь баланс в USDT
-            },
-            { 
-                icon: 'https://cryptologos.cc/logos/toncoin-ton-logo.png?v=032',
-                name: 'Toncoin', 
-                ticker: 'TON', 
-                price: 7.50, 
-                change: "+3.63%", 
-                changeColor: 'text-green-500', 
-                balance: 0, 
-                fiatBalance: 0
-            },
-            { 
-                icon: 'https://cryptologos.cc/logos/solana-sol-logo.png?v=032',
-                name: 'Solana', 
-                ticker: 'SOL', 
-                price: 161.86, 
-                change: "+5.41%", 
-                changeColor: 'text-green-500', 
-                balance: 0, 
-                fiatBalance: 0
-            }
-        ];
-        
-        // --- 4. Отрисовка ---
-        
-        function render() {
-            // Отрисовка баланса
-            totalBalanceEl.innerText = initialBalance.toFixed(2);
-            
-            // Отрисовка активов
-            assetsListEl.innerHTML = ''; // Очищаем список
-            assets.forEach(asset => {
-                // Корректируем баланс для отображения
-                let displayBalance = asset.ticker === 'USDT' ? initialBalance / 90 : asset.balance;
-                let displayFiatBalance = asset.ticker === 'USDT' ? initialBalance : asset.fiatBalance;
-
-                assetsListEl.innerHTML += `
-                <div class="flex items-center">
-                    <img src="${asset.icon}" class="w-10 h-10 rounded-full bg-white p-1" alt="${asset.ticker}">
-                    <div class="ml-3 flex-1">
-                        <div class="font-bold">${asset.name}</div>
-                        <div class="text-xs text-gray-400">$${asset.price.toFixed(2)} <span class="${asset.changeColor}">${asset.change}</span></div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-bold asset-balance">${displayBalance.toFixed(4)} ${asset.ticker}</div>
-                        <div class="text-xs text-gray-400 asset-fiat-balance">${displayFiatBalance.toFixed(2)} ?</div>
-                    </div>
-                </div>
-                `;
-            });
-            
-            // Отрисовка иконки "глаз"
-            toggleBalanceBtn.innerHTML = isBalanceHidden 
-                ? lucide.icons.EyeOff.toSvg({ width: 20, height: 20 }) 
-                : lucide.icons.Eye.toSvg({ width: 20, height: 20 });
-        }
-        
-        // --- 5. Логика кнопок ---
-        
-        // Скрыть/показать баланс
-        toggleBalanceBtn.addEventListener('click', () => {
-            isBalanceHidden = !isBalanceHidden;
-            if (isBalanceHidden) {
-                walletContainer.classList.add('balance-hidden');
-                assetsListEl.classList.add('balance-hidden');
-                balanceTitle.innerText = "Баланс скрыт";
-            } else {
-                walletContainer.classList.remove('balance-hidden');
-                assetsListEl.classList.remove('balance-hidden');
-                balanceTitle.innerText = "Общий баланс в RUB";
-            }
-            render(); // Перерисовываем иконку
+        // РћР±СЂР°Р±РѕС‚С‡РёРє РєРЅРѕРїРєРё "Р—Р°РєСЂС‹С‚СЊ"
+        document.getElementById('close-btn').addEventListener('click', () => {
+            tg.close();
         });
-        
-        // Плейсхолдеры для кнопок
-        actionButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const actionName = button.querySelector('span').innerText;
-                tg.showAlert(`Функция "${actionName}" находится в разработке.`);
-            });
+
+        // Р”РµРјРѕРЅСЃС‚СЂР°С†РёРѕРЅРЅС‹Рµ РѕР±СЂР°Р±РѕС‚С‡РёРєРё РґР»СЏ РєРЅРѕРїРѕРє
+        document.getElementById('btn-topup').addEventListener('click', () => {
+            tg.showAlert('Р¤СѓРЅРєС†РёСЏ "РџРѕРїРѕР»РЅРёС‚СЊ" РµС‰Рµ РІ СЂР°Р·СЂР°Р±РѕС‚РєРµ.');
         });
-        
-        // --- Запуск ---
-        lucide.createIcons();
-        render();
+        document.getElementById('btn-swap').addEventListener('click', () => {
+            tg.showAlert('Р¤СѓРЅРєС†РёСЏ "РћР±РјРµРЅСЏС‚СЊ" РµС‰Рµ РІ СЂР°Р·СЂР°Р±РѕС‚РєРµ.');
+        });
+        document.getElementById('btn-receive').addEventListener('click', () => {
+            tg.showAlert('Р­С‚Рѕ РІР°С€ Р°РґСЂРµСЃ РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ...');
+        });
+        document.getElementById('btn-send').addEventListener('click', () => {
+            tg.showAlert('Р¤СѓРЅРєС†РёСЏ "РћС‚РїСЂР°РІРёС‚СЊ" РµС‰Рµ РІ СЂР°Р·СЂР°Р±РѕС‚РєРµ.');
+        });
 
     </script>
 </body>
