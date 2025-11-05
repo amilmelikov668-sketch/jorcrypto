@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Wallet</title>
+    <!-- Подключаем Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Иконки (для кнопки "глаз") -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        /* Базовые стили */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            /* * Мы будем устанавливать цвета фона и текста через JS SDK,
+             * чтобы они соответствовали теме Telegram пользователя (темной или светлой).
+             * Эти цвета - просто запасной вариант.
+             */
+            background-color: var(--tg-theme-bg-color, #18222d);
+            color: var(--tg-theme-text-color, #ffffff);
+        }
+        /* Стилизация для скрытого баланса */
+        .balance-hidden .balance-value {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+        .balance-hidden .asset-balance,
+        .balance-hidden .asset-fiat-balance {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="p-4 pt-8">
+
+    <!-- 1. Блок общего баланса -->
+    <div id="wallet-container" class="text-center">
+        <div class="text-gray-400 text-sm" id="balance-title">Общий баланс в RUB</div>
+        <div class="flex items-center justify-center space-x-2 mt-1 balance-value">
+            <span class="text-4xl font-bold" id="total-balance">0.00</span>
+            <span class="text-3xl font-bold">?</span>
+        </div>
+        <button id="toggle-balance" class="absolute top-10 right-5 text-gray-400">
+            <!-- Иконка будет вставлена через JS -->
+        </button>
+    </div>
+
+    <!-- 2. Блок кнопок действий -->
+    <div class="grid grid-cols-4 gap-4 my-8">
+        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </div>
+            <span class="text-xs mt-2 font-medium">Пополнить</span>
+        </button>
+        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+            </div>
+            <span class="text-xs mt-2 font-medium">Вывести</span>
+        </button>
+        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 3 3-7 7-3-3 7-7"/><path d="m2 21 6-6"/><path d="m17 8 3 3"/><path d="M9 8c-2.2 0-4 1.8-4 4 0 2.2 1.8 4 4 4s4-1.8 4-4-1.8-4-4-4z"/></svg>
+            </div>
+            <span class="text-xs mt-2 font-medium">Обмен</span>
+        </button>
+        <button class="action-button flex flex-col items-center p-2 rounded-lg bg-blue-600/20">
+            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="4"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+            </div>
+            <span class="text-xs mt-2 font-medium">Биржа</span>
+        </button>
+    </div>
+
+    <!-- 3. Блок активов -->
+    <div>
+        <h2 class="text-xl font-bold mb-4">Активы</h2>
+        <div id="assets-list" class="space-y-4">
+            <!-- Активы будут добавлены сюда из "базы данных" -->
+            <!-- Пример актива (заполняется из JS) -->
+            <!--
+            <div class="flex items-center">
+                <img src="https://via.placeholder.com/40/374151/FFFFFF?text=T" class="w-10 h-10 rounded-full" alt="USDT">
+                <div class="ml-3 flex-1">
+                    <div class="font-bold">Tether</div>
+                    <div class="text-xs text-gray-400">$1.00 <span class="text-green-500">+0.00%</span></div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold asset-balance">0.00 USDT</div>
+                    <div class="text-xs text-gray-400 asset-fiat-balance">0.00 ?</div>
+                </div>
+            </div>
+            -->
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+
+        // --- 1. Настройка приложения ---
+        tg.ready();
+        
+        // Устанавливаем цвета из темы Telegram
+        document.body.style.backgroundColor = tg.themeParams.bg_color || '#18222d';
+        document.body.style.color = tg.themeParams.text_color || '#ffffff';
+        tg.setHeaderColor(tg.themeParams.bg_color || '#18222d');
+        tg.setBackgroundColor(tg.themeParams.bg_color || '#18222d');
+        
+        // Включаем темную/светлую тему
+        document.documentElement.style.setProperty('color-scheme', tg.colorScheme);
+
+        // --- 2. Элементы ---
+        const walletContainer = document.getElementById('wallet-container');
+        const balanceTitle = document.getElementById('balance-title');
+        const totalBalanceEl = document.getElementById('total-balance');
+        const toggleBalanceBtn = document.getElementById('toggle-balance');
+        const assetsListEl = document.getElementById('assets-list');
+        const actionButtons = document.querySelectorAll('.action-button');
+
+        let isBalanceHidden = false;
+
+        // --- 3. Получение данных ---
+        
+        // Бот (бэкенд) передаст баланс через ?balance=...
+        let initialBalance = 0;
+        if (tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+            const balanceParam = parseFloat(tg.initDataUnsafe.start_param);
+            if (!isNaN(balanceParam)) {
+                initialBalance = balanceParam;
+            }
+        }
+        
+        // Моковые (тестовые) данные об активах
+        // В реальном приложении их тоже должен присылать бэкенд
+        const assets = [
+            { 
+                icon: 'https://cryptologos.cc/logos/tether-usdt-logo.png?v=032',
+                name: 'Tether', 
+                ticker: 'USDT', 
+                price: 1.00, 
+                change: "+0.03%", 
+                changeColor: 'text-green-500', 
+                balance: initialBalance / 90, // Пример: конвертируем RUB в USDT
+                fiatBalance: initialBalance // Весь баланс в USDT
+            },
+            { 
+                icon: 'https://cryptologos.cc/logos/toncoin-ton-logo.png?v=032',
+                name: 'Toncoin', 
+                ticker: 'TON', 
+                price: 7.50, 
+                change: "+3.63%", 
+                changeColor: 'text-green-500', 
+                balance: 0, 
+                fiatBalance: 0
+            },
+            { 
+                icon: 'https://cryptologos.cc/logos/solana-sol-logo.png?v=032',
+                name: 'Solana', 
+                ticker: 'SOL', 
+                price: 161.86, 
+                change: "+5.41%", 
+                changeColor: 'text-green-500', 
+                balance: 0, 
+                fiatBalance: 0
+            }
+        ];
+        
+        // --- 4. Отрисовка ---
+        
+        function render() {
+            // Отрисовка баланса
+            totalBalanceEl.innerText = initialBalance.toFixed(2);
+            
+            // Отрисовка активов
+            assetsListEl.innerHTML = ''; // Очищаем список
+            assets.forEach(asset => {
+                // Корректируем баланс для отображения
+                let displayBalance = asset.ticker === 'USDT' ? initialBalance / 90 : asset.balance;
+                let displayFiatBalance = asset.ticker === 'USDT' ? initialBalance : asset.fiatBalance;
+
+                assetsListEl.innerHTML += `
+                <div class="flex items-center">
+                    <img src="${asset.icon}" class="w-10 h-10 rounded-full bg-white p-1" alt="${asset.ticker}">
+                    <div class="ml-3 flex-1">
+                        <div class="font-bold">${asset.name}</div>
+                        <div class="text-xs text-gray-400">$${asset.price.toFixed(2)} <span class="${asset.changeColor}">${asset.change}</span></div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold asset-balance">${displayBalance.toFixed(4)} ${asset.ticker}</div>
+                        <div class="text-xs text-gray-400 asset-fiat-balance">${displayFiatBalance.toFixed(2)} ?</div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            // Отрисовка иконки "глаз"
+            toggleBalanceBtn.innerHTML = isBalanceHidden 
+                ? lucide.icons.EyeOff.toSvg({ width: 20, height: 20 }) 
+                : lucide.icons.Eye.toSvg({ width: 20, height: 20 });
+        }
+        
+        // --- 5. Логика кнопок ---
+        
+        // Скрыть/показать баланс
+        toggleBalanceBtn.addEventListener('click', () => {
+            isBalanceHidden = !isBalanceHidden;
+            if (isBalanceHidden) {
+                walletContainer.classList.add('balance-hidden');
+                assetsListEl.classList.add('balance-hidden');
+                balanceTitle.innerText = "Баланс скрыт";
+            } else {
+                walletContainer.classList.remove('balance-hidden');
+                assetsListEl.classList.remove('balance-hidden');
+                balanceTitle.innerText = "Общий баланс в RUB";
+            }
+            render(); // Перерисовываем иконку
+        });
+        
+        // Плейсхолдеры для кнопок
+        actionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const actionName = button.querySelector('span').innerText;
+                tg.showAlert(`Функция "${actionName}" находится в разработке.`);
+            });
+        });
+        
+        // --- Запуск ---
+        lucide.createIcons();
+        render();
+
+    </script>
+</body>
+</html>
